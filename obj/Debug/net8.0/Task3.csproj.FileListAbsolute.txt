@@ -1,0 +1,14 @@
+/home/josue/Documentos/Task3/bin/Debug/net8.0/Task3
+/home/josue/Documentos/Task3/bin/Debug/net8.0/Task3.deps.json
+/home/josue/Documentos/Task3/bin/Debug/net8.0/Task3.runtimeconfig.json
+/home/josue/Documentos/Task3/bin/Debug/net8.0/Task3.dll
+/home/josue/Documentos/Task3/bin/Debug/net8.0/Task3.pdb
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.GeneratedMSBuildEditorConfig.editorconfig
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.AssemblyInfoInputs.cache
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.AssemblyInfo.cs
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.csproj.CoreCompileInputs.cache
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.dll
+/home/josue/Documentos/Task3/obj/Debug/net8.0/refint/Task3.dll
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.pdb
+/home/josue/Documentos/Task3/obj/Debug/net8.0/Task3.genruntimeconfig.cache
+/home/josue/Documentos/Task3/obj/Debug/net8.0/ref/Task3.dll
