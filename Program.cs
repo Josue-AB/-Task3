@@ -4,51 +4,71 @@ using System.Text;
 
 class Program
 {
-    static readonly int[][] dice = {
-        new int[] { 3, 3, 3, 3, 3, 6 },  
-        new int[] { 2, 2, 2, 5, 5, 5 },  
-        new int[] { 1, 4, 4, 4, 4, 4 }   
-    };
-
-    static string GenerateHMAC(string key, string value)
+    static void Main()
     {
-        using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
+        Console.Write("Elige un dado (A/B/C): ");
+        string userDice = Console.ReadLine().ToUpper();
+
+        // Validación de entrada del dado
+        while(userDice != "A" && userDice != "B" && userDice != "C")
         {
-            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(value));
-            return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            Console.Write("Entrada inválida. Elige un dado (A/B/C): ");
+            userDice = Console.ReadLine().ToUpper();
         }
+
+        string[] diceOptions = { "A", "B", "C" };
+        string computerDice = diceOptions[new Random().Next(0, 3)];
+
+        byte[] diceKey = GenerateRandomKey();
+        string diceHMAC = GenerateHMAC(diceKey, $"{userDice}{computerDice}");
+
+        Console.WriteLine("\n--- Selección de dados ---");
+        Console.WriteLine($"HMAC (clave oculta): {diceHMAC}");
+        Console.WriteLine($"Computadora eligió: {computerDice}");
+
+        Console.Write("\nTu tirada (1-6): ");
+        string userRoll = Console.ReadLine();
+        int userRollValue;
+        
+        // Validación de la tirada
+        while(!int.TryParse(userRoll, out userRollValue) || userRollValue < 1 || userRollValue > 6)
+        {
+            Console.Write("Entrada inválida. Tu tirada (1-6): ");
+            userRoll = Console.ReadLine();
+        }
+
+        string computerRoll = new Random().Next(1, 7).ToString();
+
+        byte[] rollKey = GenerateRandomKey();
+        string rollHMAC = GenerateHMAC(rollKey, $"{userRoll}{computerRoll}");
+
+        Console.WriteLine("\n--- Resultados ---");
+        Console.WriteLine($"HMAC (clave oculta): {rollHMAC}");
+        Console.WriteLine($"Computadora tiró: {computerRoll}");
+        Console.WriteLine($"Tu tirada: {userRoll}");
+
+        Console.WriteLine("\n--- Claves para verificación ---");
+        Console.WriteLine($"Clave selección dados: {BitConverter.ToString(diceKey).Replace("-", "")}");
+        Console.WriteLine($"Clave tirada: {BitConverter.ToString(rollKey).Replace("-", "")}");
     }
 
-    static int RollDice(int[] die, string playerName, string secretKey)
+    static byte[] GenerateRandomKey()
     {
-        Random rand = new Random();
-        int roll = die[rand.Next(die.Length)];
-        string hmac = GenerateHMAC(secretKey, roll.ToString());
-        
-        Console.WriteLine($"{playerName} tira: {roll} (HMAC: {hmac})");
-        return roll;
+        byte[] key = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(key);  
+        }
+        return key;
     }
 
-    static void Main(string[] args)
+    static string GenerateHMAC(byte[] key, string data)
     {
-        Console.WriteLine("=== JUEGO DE DADOS NO TRANSITIVOS ===");
-        
-        const string secretKeyUser = "clave_usuario";
-        const string secretKeyPC = "clave_pc";
-
-        Console.WriteLine("\nElige un dado (A, B, C):");
-        char userChoice = Console.ReadLine().ToUpper()[0];
-        int userDieIndex = userChoice - 'A';
-
-        Random rand = new Random();
-        int pcDieIndex = rand.Next(3);
-        Console.WriteLine($"\nPC elige: {(char)('A' + pcDieIndex)}");
-
-        int userRoll = RollDice(dice[userDieIndex], "Usuario", secretKeyUser);
-        int pcRoll = RollDice(dice[pcDieIndex], "PC", secretKeyPC);
-
-        Console.WriteLine($"\nResultado: Usuario {userRoll} vs PC {pcRoll}");
-        Console.WriteLine(userRoll > pcRoll ? "¡Ganas!" : 
-                         userRoll < pcRoll ? "¡PC gana!" : "Empate.");
+        using (var hmac = new HMACSHA256(key))
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            byte[] hash = hmac.ComputeHash(bytes);
+            return BitConverter.ToString(hash).Replace("-", "");
+        }
     }
 }
