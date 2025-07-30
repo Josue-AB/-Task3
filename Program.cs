@@ -4,52 +4,57 @@ using System.Text;
 
 class Program
 {
-    static void Main()
+    static void Main(string[] args)
     {
-        Console.Write("Elige un dado (A/B/C): ");
-        string userDice = Console.ReadLine().ToUpper();
-
-        // Validación de entrada del dado
-        while(userDice != "A" && userDice != "B" && userDice != "C")
+        // Aqui se hace la validacion de argumentos
+        if (args.Length != 2)
         {
-            Console.Write("Entrada inválida. Elige un dado (A/B/C): ");
-            userDice = Console.ReadLine().ToUpper();
+            Console.WriteLine("Uso: programa <dado_usuario> <dado_pc>");
+            Console.WriteLine("Ejemplo: programa A B");
+            return;
         }
 
-        string[] diceOptions = { "A", "B", "C" };
-        string computerDice = diceOptions[new Random().Next(0, 3)];
+        string userDice = args[0].ToUpper();
+        string computerDice = args[1].ToUpper();
 
+        // Aqui se genera las claves HMAC para mayor transparencia
         byte[] diceKey = GenerateRandomKey();
-        string diceHMAC = GenerateHMAC(diceKey, $"{userDice}{computerDice}");
-
-        Console.WriteLine("\n--- Selección de dados ---");
-        Console.WriteLine($"HMAC (clave oculta): {diceHMAC}");
-        Console.WriteLine($"Computadora eligió: {computerDice}");
-
-        Console.Write("\nTu tirada (1-6): ");
-        string userRoll = Console.ReadLine();
-        int userRollValue;
+        string diceHMAC = GenerateHMAC(diceKey, $"{computerDice}");
         
-        // Validación de la tirada
-        while(!int.TryParse(userRoll, out userRollValue) || userRollValue < 1 || userRollValue > 6)
+        Console.WriteLine("\n--- Fase de Transparencia ---");
+        Console.WriteLine($"HMAC (clave oculta): {diceHMAC}");
+
+        // Generacion colaborativa de las tiradas
+        Console.Write("\nIngresa tu número aleatorio (semilla, 1-1000): ");
+        int userSeed;
+        while (!int.TryParse(Console.ReadLine(), out userSeed) || userSeed < 1 || userSeed > 1000)
         {
-            Console.Write("Entrada inválida. Tu tirada (1-6): ");
-            userRoll = Console.ReadLine();
+            Console.Write("Entrada inválida. Ingresa un número (1-1000): ");
         }
 
-        string computerRoll = new Random().Next(1, 7).ToString();
+        var combinedRandom = new Random(userSeed + Environment.TickCount);
+        int computerRoll = combinedRandom.Next(1, 7);
+        int userRoll = combinedRandom.Next(1, 7);
 
+        // Resultados
         byte[] rollKey = GenerateRandomKey();
-        string rollHMAC = GenerateHMAC(rollKey, $"{userRoll}{computerRoll}");
+        string rollHMAC = GenerateHMAC(rollKey, $"{computerRoll}");
 
         Console.WriteLine("\n--- Resultados ---");
-        Console.WriteLine($"HMAC (clave oculta): {rollHMAC}");
-        Console.WriteLine($"Computadora tiró: {computerRoll}");
         Console.WriteLine($"Tu tirada: {userRoll}");
+        Console.WriteLine($"Computadora tiró: {computerRoll}");
+        Console.WriteLine($"HMAC de la tirada: {rollHMAC}");
 
-        Console.WriteLine("\n--- Claves para verificación ---");
-        Console.WriteLine($"Clave selección dados: {BitConverter.ToString(diceKey).Replace("-", "")}");
-        Console.WriteLine($"Clave tirada: {BitConverter.ToString(rollKey).Replace("-", "")}");
+        // Reveleacion de las claves
+        Console.WriteLine("\n--- Verificación ---");
+        Console.WriteLine($"Clave HMAC selección dados: {BitConverter.ToString(diceKey).Replace("-", "")}");
+        Console.WriteLine($"Clave HMAC tiradas: {BitConverter.ToString(rollKey).Replace("-", "")}");
+
+        // La logica de quien gano
+        Console.WriteLine("\n--- Ganador ---");
+        if (userRoll > computerRoll) Console.WriteLine("¡Ganaste!");
+        else if (userRoll < computerRoll) Console.WriteLine("¡La computadora gana!");
+        else Console.WriteLine("¡Empate!");
     }
 
     static byte[] GenerateRandomKey()
@@ -57,7 +62,7 @@ class Program
         byte[] key = new byte[32];
         using (var rng = RandomNumberGenerator.Create())
         {
-            rng.GetBytes(key);  
+            rng.GetBytes(key);
         }
         return key;
     }
